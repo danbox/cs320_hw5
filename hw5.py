@@ -1,4 +1,5 @@
 __author__ = 'Dan Boxler'
+import copy
 
 '''
 This is an implementation of the adjacency-list representation of a graph
@@ -46,11 +47,15 @@ class Graph:
         all the edges '''
     def transpose (self):
         #create new list for transpose
-        transpose = [[] for i in range(self.getn())]
+        transpose_list = [[] for i in range(self.getn())]
 
         for index, vertex in enumerate(self._verts):
             for adjacent in vertex:
-                transpose[adjacent].append(index)
+                transpose_list[adjacent].append(index)
+
+        # create duplicate of self and set list to transpose
+        transpose = copy.deepcopy(self)
+        transpose._verts = transpose_list
 
         return transpose
 
@@ -71,20 +76,39 @@ class Graph:
 
     '''  Determine whether the graph is strongly connected '''
     def stronglyConnected(self):
-        # fill in code here
+        strongly_connected = True
 
         #create list for colored
         colored = [False for i in range(self.getn())]
 
-        reachable = self._verts[vertex]
+        #call DFS on first vertex
+        self.dfs(0, colored)
+        if False in colored:
+            strongly_connected = False
 
+        #reset colored list
+        colored = [False for i in range(self.getn())]
 
-        return True
+        #get transpose of graph and call dfs on first vertex
+        transpose = self
+        transpose.dfs(0, colored)
+        if False in colored:
+            strongly_connected = False
+
+        return strongly_connected
 
     ''' This is a variant on DFS that returns a list of vertices that
         were blackened during the call, in the order in which they finished. '''
     def finishOrder(self, i, colored, finished):
-        # fill in code here
+        #create empty list for finished
+
+        colored[i] = True
+        for j in self._verts[i]:
+            if not colored[j]:
+                finished = self.finishOrder(j, colored, finished)
+
+        finished.append(i)
+
         return finished
 
     ''' Go through each in the graph in the order given by vertOrder,
@@ -98,15 +122,43 @@ class Graph:
         useful for the strongly-connected componentns algorithm. '''
     def blacken(self, vertOrder = None):
         finished = []
-        # fill in code here
+
+        #create colored list initialized to false
+        colored = [False for i in range(self.getn())]
+
+        #vertOrder not specified, using ascending order of vertex number
+        if not vertOrder:
+            for index, vertex in enumerate(self._verts):
+                if not colored[index]:
+                    temp = []
+                    temp = self.finishOrder(index, colored, temp)
+                    finished.append(temp)
+        #order specified
+        else:
+            for index in vertOrder:
+                if not colored[index]:
+                    temp = []
+                    temp = self.finishOrder(index, colored, temp)
+                    finished.append(temp)
+
         return finished
 
     ''' Return the strongly-connected components, as a list L of lists of
         integers.  Each list in L has the vertices in one strongly-connected
         components. '''
     def scc(self):
-        # fill in code here
-        return []
+        #call blacken on graph
+        l = self.blacken()
+
+        #get transpose
+        transpose = self.transpose()
+
+        #call blacken on descending order of finishing times from first call
+        l2 = [j for i in l for j in i]
+        l2.reverse()
+        l3 = transpose.blacken(l2)
+
+        return l3
 
 '''  Read a graph in from a file.  The format of the file is as follows:
      The first line gives the number of vertices.
@@ -139,5 +191,5 @@ def readGraph(filename):
 
 if __name__ == '__main__':
 
-    G = readGraph('input.txt')
+    G = readGraph('input3.txt')
     print(G)
