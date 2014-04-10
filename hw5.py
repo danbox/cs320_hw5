@@ -42,6 +42,16 @@ class Graph:
         for u, v in edgeList:
             self._verts[u].append(v)
 
+    ''' return a list of ordered pairs giving the edges of the graph '''
+    def getEdges(self):
+        #create empty edgeList
+        edgeList = []
+
+        #loop through vertices and append edges to edgeList
+        for index, vertex in enumerate(self._verts):
+            for adjacent in vertex:
+                edgeList.append((index, adjacent))
+        return edgeList
 
     ''' Return the transpose of the graph, that is, the result of reversing
         all the edges '''
@@ -191,5 +201,5 @@ def readGraph(filename):
 
 if __name__ == '__main__':
 
-    G = readGraph('input3.txt')
+    G = readGraph('input.txt')
     print(G)
